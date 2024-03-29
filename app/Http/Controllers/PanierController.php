@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Product;
+use App\Models\product;
 use Illuminate\Http\Request;
 
 class PanierController extends Controller
@@ -11,21 +11,22 @@ class PanierController extends Controller
         // Récupérez les données du panier depuis la session
         $panier = session()->get('panier', []);
 
-        // Calculez le total du panier
-        $total_panier = 0;
+        // // Calculez le total du panier
+        // $total_panier = 0;
 
-        foreach ($panier as $produit) {
-            $total_panier +=  $produit['quantite'] * $produit['price'];
-        }
+        // foreach ($panier as $produit) {
+        //     $total_panier +=  $produit['quantite'] * $produit['price'];
+        // }
 
 
         // Retournez la vue du panier avec les données
-        return view('panier.panier', compact('panier', 'total_panier'));
+        return view('panier.index', compact('panier'));
     }
+
 
     public function ajouter(Request $request, $produit_id)
     {
-        $produit = Product::find($produit_id);
+        $produit = product::find($produit_id);
 
         if (!$produit) {
             return redirect()->route('produits.index')->with('error', 'Produit non trouvé.');
@@ -49,8 +50,6 @@ class PanierController extends Controller
 
         return redirect()->route('panier.index');
 
-
-
     }
     public function supprimer($produit_id)
     {
@@ -63,30 +62,22 @@ class PanierController extends Controller
 
         return redirect()->route('panier.index')->with('success', 'Produit supprimé du panier.');
     }
-    public function modifier(Request $request, $produit_id)
+
+    public function quantitée(Request $request, $produit_id)
     {
-        $quantite = $request->input('quantite');
-
-        if ($quantite <= 0) {
-            // Gérer la suppression du produit si la quantité est nulle ou négative
-            return redirect()->route('panier.supprimer', $produit_id);
-        }
-
-        $produit = Product::find($produit_id);
-
-        if (!$produit) {
-            return redirect()->route('produits.index')->with('error', 'Produit non trouvé.');
-        }
-
         $panier = session()->get('panier', []);
 
+        // Vérifie si le produit existe dans le panier
         if (array_key_exists($produit_id, $panier)) {
-            // Mettez à jour la quantité du produit dans le panier
-            $panier[$produit_id]['quantite'] = $quantite;
+            $panier[$produit_id]['quantite'] = $request->quantite;
+            session()->put('panier', $panier);
         }
 
-        session()->put('panier', $panier);
+        return redirect()->route('panier.index');
+    }
 
-        return redirect()->route('panier.index')->with('success', 'Quantité du produit mise à jour.');
+    public function valider()
+    {
+        return view('panier.show');
     }
 }
